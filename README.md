@@ -1,7 +1,7 @@
-# YOUR_REG_NO — DevOps Fundamentals Final Project
+# 2212357 — DevOps Fundamentals Final Project
 
-**Student:** Your Full Name
-**Registration Number:** YOUR_REG_NO
+**Student:** Chanderkant
+**Registration Number:** 2212357
 **Course:** DevOps Fundamentals
 **Live URL:** `http://<YOUR_EC2_IP>:8000`
 
@@ -67,65 +67,46 @@ curl http://localhost:8000/students/1
 
 ## Local Development Setup
 
-### Prerequisites
-- Docker Desktop (or Docker Engine + Docker Compose plugin)
-- Git
-
-### Steps
-
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/YOUR_REGNUM-devops-project.git
-cd YOUR_REGNUM-devops-project
+git clone https://github.com/Chanderkant11/2212357-devops-project.git
+cd 2212357-devops-project
 
-# 2. Create your .env file from the template
+# 2. Create your .env file
 cp .env.example .env
-# Edit .env with your preferred credentials (or leave defaults)
 
-# 3. Build and start both containers
+# 3. Build and start containers
 docker compose up --build
 
-# 4. Verify the app is running
+# 4. Test it
 curl http://localhost:8000/health
-# Expected: {"status":"ok","db":"connected","student":"YOUR_REG_NO"}
-```
-
-The API is now live at `http://localhost:8000`.
-Interactive docs: `http://localhost:8000/docs`
-
----
-
-## Running Tests Locally
-
-```bash
-# Install dependencies (in a virtual environment recommended)
-python -m venv venv
-source venv/bin/activate     # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# Run all tests
-pytest app/tests/ -v
-
-# Run linter
-flake8 app/ --max-line-length=100
 ```
 
 ---
 
-## AWS EC2 Deployment (Manual First-Time Setup)
+## GitHub Secrets Required
 
-### 1. Launch EC2 Instance
-- AMI: Ubuntu Server 22.04 LTS
-- Instance type: t2.micro (free tier)
-- Security Group inbound rules:
-  - Port 22 (SSH) — your IP
-  - Port 8000 (HTTP) — 0.0.0.0/0
+Go to your GitHub repo → **Settings → Secrets → Actions** and add:
 
-### 2. Install Docker on EC2
+| Secret Name | Value |
+|-------------|-------|
+| `EC2_HOST` | Your EC2 public IP address |
+| `EC2_USER` | `ubuntu` |
+| `EC2_SSH_KEY` | Full contents of your `.pem` private key file |
+| `REPO_URL` | `https://github.com/Chanderkant11/2212357-devops-project.git` |
+| `POSTGRES_USER` | `postgres` |
+| `POSTGRES_PASSWORD` | Any strong password |
+| `POSTGRES_DB` | `studentsdb` |
+
+---
+
+## EC2 First-Time Setup
 
 ```bash
+# SSH into your EC2
 ssh -i your-key.pem ubuntu@<EC2_PUBLIC_IP>
 
+# Install Docker
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -144,93 +125,39 @@ sudo usermod -aG docker ubuntu
 newgrp docker
 ```
 
-### 3. Clone the Repo on EC2
-
-```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REGNUM-devops-project.git ~/app
-cd ~/app
-cp .env.example .env
-# Fill in strong production values in .env
-```
-
-### 4. Set GitHub Secrets
-
-In your GitHub repo → Settings → Secrets → Actions, add:
-
-| Secret | Value |
-|--------|-------|
-| `EC2_HOST` | Your EC2 public IP |
-| `EC2_USER` | `ubuntu` |
-| `EC2_SSH_KEY` | Contents of your `.pem` private key |
-| `REPO_URL` | `https://github.com/YOUR_USERNAME/YOUR_REGNUM-devops-project.git` |
-| `POSTGRES_USER` | e.g. `postgres` |
-| `POSTGRES_PASSWORD` | Strong password |
-| `POSTGRES_DB` | e.g. `studentsdb` |
-
-### 5. Trigger First Deploy
-
-```bash
-git commit --allow-empty -m "chore: trigger initial CD deploy"
-git push origin main
-```
-
-Watch the Actions tab — the CD job will SSH into EC2 and start the containers automatically.
-
 ---
 
-## CI/CD Pipeline
+## Running Tests Locally
 
-### CI (`.github/workflows/ci.yml`)
-Triggers on every push and pull request to any branch.
-1. Checks out code
-2. Installs Python dependencies
-3. Runs `flake8` linter (max line length 100)
-4. Runs `pytest` with SQLite in-memory test database
-
-### CD (`.github/workflows/cd.yml`)
-Triggers only on push to `main`.
-1. SSHs into EC2 using stored secrets
-2. Pulls latest code via `git pull`
-3. Writes `.env` from GitHub Secrets
-4. Runs `docker compose -f docker-compose.prod.yml up --build -d`
-5. Confirms health endpoint returns 200
-
----
-
-## Git Workflow
-
-This project follows a feature-branch workflow:
-
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+pytest app/tests/ -v
+flake8 app/ --max-line-length=100
 ```
-main          ← protected, auto-deploys to EC2
-  └── feat/docker-setup
-  └── feat/api-endpoints
-  └── feat/ci-pipeline
-  └── feat/cd-pipeline
-  └── docs/readme
-```
-
-Each feature branch is merged into `main` via a Pull Request after CI passes.
 
 ---
 
 ## Project Structure
 
 ```
-YOUR_REGNUM-devops-project/
+2212357-devops-project/
 ├── app/
+│   ├── __init__.py
 │   ├── main.py               ← FastAPI routes & endpoints
 │   ├── database.py           ← SQLAlchemy engine & session
 │   ├── models.py             ← Student ORM model
 │   └── tests/
+│       ├── __init__.py
 │       ├── conftest.py       ← pytest fixtures, SQLite test DB
 │       ├── test_health.py    ← /health endpoint tests
 │       └── test_students.py  ← POST & GET /students tests
-├── Dockerfile                ← Multi-stage, non-root user
+├── Dockerfile
 ├── docker-compose.yml        ← Local development
 ├── docker-compose.prod.yml   ← Production (EC2)
 ├── requirements.txt
-├── .env.example              ← Template — never commit real .env
+├── .env.example
 ├── .gitignore
 ├── .dockerignore
 ├── .github/

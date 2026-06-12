@@ -1,36 +1,17 @@
-# Git
-.git
-.gitignore
-.github
-
-# Python cache
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-*.egg-info
-dist/
-build/
-
-# Environment & secrets
 .env
 *.env
-
-# Test artifacts
-.pytest_cache
-test.db
-htmlcov/
-.coverage
-
-# Docs
-README.md
-*.md
-
-# IDE
-.idea/
-.vscode/
-
-# Docker files (not needed inside image)
-docker-compose*.yml
-Dockerfile
+.git
+.gitignore
 .dockerignore
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+test.db
+venv/
+.venv/
+*.tar
+README.md
+docker-compose*.yml

@@ -1,4 +1,4 @@
-# ── Build stage ───────────────────────────────────────────────────────────────
+# ── Build stage ────────────────────────────────────────────────
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
@@ -8,7 +8,7 @@ RUN pip install --upgrade pip \
     && pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 
-# ── Runtime stage ─────────────────────────────────────────────────────────────
+# ── Runtime stage ──────────────────────────────────────────────
 FROM python:3.11-slim
 
 # Non-root user for security
