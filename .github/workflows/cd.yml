@@ -18,22 +18,21 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. Install Docker and Docker Compose on Amazon Linux if missing
+            # 1. Update and install Docker using yum (for Amazon Linux)
+            sudo yum update -y
             if ! command -v docker &> /dev/null; then
-              sudo yum update -y
               sudo yum install -y docker
               sudo systemctl start docker
               sudo systemctl enable docker
               sudo usermod -aG docker ec2-user
             fi
             
-            if ! command -v docker-compose &> /dev/null; then
-              sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-              sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose || true
-            fi
+            # 2. Setup standard standalone Docker Compose
+            sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+            sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
 
-            # 2. Sync Codebase
+            # 3. Synchronize application folder
             mkdir -p ~/app
             cd ~/app
             if [ ! -d ".git" ]; then
@@ -43,6 +42,7 @@ jobs:
               git reset --hard origin/main
             fi
             
-            # 3. Deploy using your production configuration
+            # 4. Stop existing containers and launch the production environment file
             sudo /usr/local/bin/docker-compose -f docker-compose.prod.yml down || true
             sudo /usr/local/bin/docker-compose -f docker-compose.prod.yml up -d --build
+            
