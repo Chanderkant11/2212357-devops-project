@@ -1,45 +1,30 @@
-name: CD – Deploy to EC2
+name: CD - Deploy to EC2
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   deploy:
-    name: SSH & redeploy on EC2
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to EC2 via SSH
+      - name: SSH & redeploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            set -e
-
-            # ── Pull latest code ──────────────────────────────────────────────
-            cd ~/app || git clone ${{ secrets.REPO_URL }} ~/app && cd ~/app
-            git pull origin main
-
-            # ── Write production .env from GitHub Secrets ─────────────────────
-            cat > .env <<EOF
-            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-            EOF
-
-            # ── Rebuild & restart containers ──────────────────────────────────
-            docker compose -f docker-compose.prod.yml down --remove-orphans
-            docker compose -f docker-compose.prod.yml up --build -d
-
-            # ── Confirm health ─────────────────────────────────────────────────
-            sleep 10
-            curl -f http://localhost:8000/health || exit 1
-
-            echo "✅ Deployment successful"
+            mkdir -p ~/app
+            cd ~/app
+            if [ ! -d ".git" ]; then
+              git clone https://github.com/Chanderkant11/2212357-devops-project.git .
+            else
+              git fetch --all
+              git reset --hard origin/main
+            fi
+            sudo docker compose down || true
+            sudo docker compose up -d --build
