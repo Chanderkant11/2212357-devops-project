@@ -18,7 +18,6 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Automatically install Docker if it is missing
             if ! command -v docker &> /dev/null; then
               sudo yum update -y
               sudo yum install -y docker
@@ -26,19 +25,14 @@ jobs:
               sudo systemctl enable docker
               sudo usermod -aG docker ec2-user
             fi
-            
-            # Setup application directory
             mkdir -p ~/app
             cd ~/app
-            
             if [ ! -d ".git" ]; then
               git clone https://github.com/Chanderkant11/2212357-devops-project.git .
             else
               git fetch --all
               git reset --hard origin/main
             fi
-            
-            # Run application using native docker builders
             sudo docker stop web-app || true
             sudo docker rm web-app || true
             sudo docker build -t fastapi-app .
